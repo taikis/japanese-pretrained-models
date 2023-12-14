@@ -168,7 +168,7 @@ def train(local_rank, config):
 
     # build tokenizer
     tokenizer = T5Tokenizer(
-        vocab_file="../data/tokenizer/google_sp.model",
+        vocab_file="../data/tokenizer/old_japanese.model",
         bos_token="<s>",
         eos_token="</s>",
         unk_token="<unk>",
@@ -191,6 +191,23 @@ def train(local_rank, config):
     for corpus in config.corpora:
         corpus2train_filepaths[corpus] = []
         corpus2dev_filepaths[corpus] = []
+
+        if corpus == "old_japanese":
+            from corpus.old_japanese.config import Config
+            corpus_config = Config()
+
+            dev_file_idx = 42
+            
+            corpus_filepaths = sorted(list(filter(
+                lambda x: x.endswith(".txt"),
+                os.listdir(corpus_config.doc_data_dir)
+            )))
+            for file_idx, filepath in enumerate(corpus_filepaths):
+                if file_idx == dev_file_idx:
+                    corpus2dev_filepaths[corpus].append(f"{corpus_config.doc_data_dir}/{corpus_filepaths[file_idx]}")
+                else:
+                    corpus2train_filepaths[corpus].append(f"{corpus_config.doc_data_dir}/{corpus_filepaths[file_idx]}")
+
         if corpus == "jp_cc100":
             from corpus.jp_cc100.config import Config
             corpus_config = Config()
@@ -604,7 +621,8 @@ if __name__ == "__main__":
     parser.add_argument("--max_grad_norm", type=float, default=1.0, help="gradient clipping threshold")
 
     # management
-    parser.add_argument("--corpora", type=str, nargs="+", default=["jp_cc100", "jp_wiki"], help="training corpora")
+    # parser.add_argument("--corpora", type=str, nargs="+", default=["jp_cc100", "jp_wiki"], help="training corpora")
+    parser.add_argument("--corpora", type=str, nargs="+", default=["old_japanese"], help="training corpora")
     parser.add_argument("--checkpoint_path", help="path to saved checkpoint file")
     parser.add_argument("--resume_training", type=str2bool, default=False, help="resume training from checkpoint or not")
     parser.add_argument("--enable_log", type=str2bool, default=False, help="save training log or not")

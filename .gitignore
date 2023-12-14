@@ -7,6 +7,8 @@ log/
 # Exclude tokenizer data
 !data/tokenizer/google_sp.vocab
 !data/tokenizer/google_sp.model
+!data/old_japanese/.gitkeep
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

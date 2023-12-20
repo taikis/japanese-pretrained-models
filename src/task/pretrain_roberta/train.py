@@ -65,6 +65,7 @@ def load_docs_from_filepath(filepath, tokenizer):
                 token_ids = tokenizer.convert_tokens_to_ids(tokens)
                 if len(token_ids) > 0:
                     doc.append(token_ids)
+        docs.append(doc)
     return docs
 
 
@@ -177,7 +178,7 @@ def train(local_rank, config):
         sep_token="[SEP]",
         mask_token="[MASK]",
         extra_ids=0,
-        additional_special_tokens=(),
+        additional_special_tokens=[],
         do_lower_case=True
     )
 

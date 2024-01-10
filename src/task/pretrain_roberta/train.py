@@ -70,6 +70,7 @@ def load_docs_from_filepath(filepath, tokenizer):
 
 
 def construct_data(tokenizer, seqs, mask_prob, device):
+    # TODO 直す
     batch_size = len(seqs)
     max_seq_len = max([len(seq) for seq in seqs])
 
@@ -416,7 +417,7 @@ def train(local_rank, config):
         for train_file_idx in range(start_train_file_idx, len(train_filepaths), config.n_train_files_per_group):
             
             group_train_filepaths = train_filepaths[train_file_idx:train_file_idx+config.n_train_files_per_group]
-            
+            print(group_train_filepaths)
             with mp.Pool(processes=config.n_train_files_per_group) as pool:
                 group_train_docs = pool.starmap(
                     load_docs_from_filepath, 
@@ -425,6 +426,7 @@ def train(local_rank, config):
                 train_docs = [doc for docs in group_train_docs for doc in docs]
 
             train_data_source = DataSource(config, tokenizer, train_docs, "train")
+
             mp_print(str(train_data_source.statistics), global_rank)
             # single gpu or cpu
             if config.world_size == 1 or not torch.cuda.is_available():
@@ -465,15 +467,16 @@ def train(local_rank, config):
                 # stop if reaches the maximum tranining step
                 if n_step >= config.n_training_steps:
                     break
-
+                
+                print("step:",n_step)
                 # forward
                 model.train()
+                #ここで詰まる
                 with amp.autocast():
                     loss, ppl = forward_step(model, tokenizer, batch_data, config.mask_prob)
-
                 # update statisitcs
                 trn_reporter.update_data({"ppl": ppl.item(), "loss": loss.item()})
-
+                
                 # backward
                 loss /= config.n_accum_steps
                 if config.use_amp:
@@ -498,6 +501,7 @@ def train(local_rank, config):
 
                     # zero gradients
                     optimizer.zero_grad()
+                    mp_print("after zero grad", global_rank)
 
                 # check loss
                 if n_step > 0 and n_step % config.check_loss_after_n_step == 0:
@@ -511,6 +515,7 @@ def train(local_rank, config):
                             tb_writer.add_scalar(f"{k}/train", np.mean(v), n_step)
 
                     trn_reporter.clear()
+                    mp_print("after clear", global_rank)
 
                 # evaluation on dev dataset
                 if global_rank == 0 and n_step > 0 and n_step % config.validate_after_n_step == 0:

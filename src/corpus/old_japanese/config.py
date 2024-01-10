@@ -5,6 +5,7 @@ class Config(object):
         self.data_dir = "../data/"
         self.text_dir = "../data/old_japanese/doc_data"
         self.data_url = "https://github.com/taikis/koten-text/releases/download/1.0/shaped-text.zip"
+        self.extracted_data_path = "../data/old_japanese/book_data"
 
         # SENTENCEPIECE configuration
         self.sp_prefix = "../data/tokenizer/old_japanese"

@@ -46,9 +46,10 @@ class DataSource(torch.utils.data.Dataset):
         return len(self.docs)
 
     def __getitem__(self, idx):
+        #FIXME ここで[4]がでるととまる
         doc = self.docs[idx]
-        
+        # #TODO コメント削除 doc
+        # print(doc)
         seq = list(itertools.chain(*doc))
         seq = [self.tokenizer.cls_token_id] + seq[:self.max_seq_len - 1]
-
         return seq

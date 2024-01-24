@@ -22,8 +22,6 @@ config = Config()
 N_LINES_PER_FILE = 1e3
 
 
-
-
 def split_file(book_data_path,book_name):
     output_file_id = 0
     output_file = open(f"{config.doc_data_dir}/{book_name}-{output_file_id}.txt", "w+", encoding="utf-8")

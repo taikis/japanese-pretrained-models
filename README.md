@@ -17,6 +17,7 @@ python -m corpus.old_japanese.download_shaped_text
 
 ```bash
 python -m corpus.old_japanese.split_to_small_files
+python -m corpus.old_japanese.shape_text
 ```
 
 ### 2 Train SentencePiece model
@@ -53,4 +54,19 @@ CUDA_VISIBLE_DEVICES=0 python -m task.pretrain_roberta.train \
     --n_training_steps 50000 \
     --n_accum_steps 16 \
     --init_lr 0.0006
+```
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python -m task.pretrain_roberta.train \
+    --n_gpus 1 \
+    --save_model True \
+    --enable_log True \
+    --model_size base \
+    --model_config_filepath model/roberta-ja-base-config.json \
+    --batch_size 8 \
+    --eval_batch_size 8 \
+    --n_training_steps 50000 \
+    --n_accum_steps 16 \
+    --init_lr 0.0006 \
+    --validate_after_n_step 50
 ```

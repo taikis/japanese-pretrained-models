@@ -70,16 +70,13 @@ def load_docs_from_filepath(filepath, tokenizer):
 
 
 def construct_data(tokenizer, seqs, mask_prob, device):
-    # TODO 直す
     batch_size = len(seqs)
     max_seq_len = max([len(seq) for seq in seqs])
 
     # padding input sequences
     seqs = [seq + [tokenizer.pad_token_id]*(max_seq_len-len(seq)) for seq in seqs]
-
     # convert to tensors
     seqs = torch.LongTensor(seqs)
-
     # get mask token masks
     special_token_masks = torch.zeros(seqs.size()).bool()
     for special_token_id in [tokenizer.pad_token_id, tokenizer.cls_token_id]:
@@ -87,11 +84,15 @@ def construct_data(tokenizer, seqs, mask_prob, device):
     # sample mask token masks
     mask_token_probs = torch.FloatTensor([mask_prob]).expand_as(seqs)  # [batch_size, max_seq_len]
     mask_token_probs = mask_token_probs.masked_fill(special_token_masks, 0.0)
+    # print(mask_token_probs)
+    # #TODO コメント削除
+    # print("s")
+    # FIXME
     while True:  # prevent that there is not any mask token
         mask_token_masks = torch.bernoulli(mask_token_probs).bool()
         if (mask_token_masks.long().sum(1) == 0).sum() == 0:
             break
-
+    # print("e")
     # input ids
     input_ids = seqs.clone()
     input_ids[mask_token_masks] = tokenizer.mask_token_id
@@ -417,17 +418,17 @@ def train(local_rank, config):
         for train_file_idx in range(start_train_file_idx, len(train_filepaths), config.n_train_files_per_group):
             
             group_train_filepaths = train_filepaths[train_file_idx:train_file_idx+config.n_train_files_per_group]
-            print(group_train_filepaths)
+            # #TODO コメント削除
+            # print(group_train_filepaths)
             with mp.Pool(processes=config.n_train_files_per_group) as pool:
                 group_train_docs = pool.starmap(
                     load_docs_from_filepath, 
                     [(train_filepath, tokenizer) for train_filepath in group_train_filepaths]
                 )
                 train_docs = [doc for docs in group_train_docs for doc in docs]
-
             train_data_source = DataSource(config, tokenizer, train_docs, "train")
 
-            mp_print(str(train_data_source.statistics), global_rank)
+            # mp_print(str(train_data_source.statistics), global_rank)
             # single gpu or cpu
             if config.world_size == 1 or not torch.cuda.is_available():
                 train_data_sampler = RandomSampler(
@@ -467,11 +468,11 @@ def train(local_rank, config):
                 # stop if reaches the maximum tranining step
                 if n_step >= config.n_training_steps:
                     break
-                
-                print("step:",n_step)
+                # #TODO コメント削除
+                # print("step:",n_step)
                 # forward
                 model.train()
-                #ここで詰まる
+                #FIXME ここで詰まる
                 with amp.autocast():
                     loss, ppl = forward_step(model, tokenizer, batch_data, config.mask_prob)
                 # update statisitcs
@@ -501,7 +502,7 @@ def train(local_rank, config):
 
                     # zero gradients
                     optimizer.zero_grad()
-                    mp_print("after zero grad", global_rank)
+                    # mp_print("after zero grad", global_rank)
 
                 # check loss
                 if n_step > 0 and n_step % config.check_loss_after_n_step == 0:
@@ -515,7 +516,7 @@ def train(local_rank, config):
                             tb_writer.add_scalar(f"{k}/train", np.mean(v), n_step)
 
                     trn_reporter.clear()
-                    mp_print("after clear", global_rank)
+                    # mp_print("after clear", global_rank)
 
                 # evaluation on dev dataset
                 if global_rank == 0 and n_step > 0 and n_step % config.validate_after_n_step == 0:
